@@ -74,11 +74,76 @@ Le **mode bouton** est adapté à une barre de commandes précise. Les pages con
 // @match        https://*.notebooks.datascientest.com/*
 ```
 
-Ce filtre technique reste nécessaire pour limiter l'exécution aux pages prises en charge. L'intégration attend un bouton SAVE portant l'identifiant `save_notebook-button` et un objet `Jupyter.notebook` ou `IPython.notebook` accessible. Pour prendre en charge un autre site, il faut adapter et tester ces points, pas seulement modifier le nom du projet.
+Ce filtre technique reste nécessaire pour limiter l'exécution aux pages prises en charge. Par défaut, le bouton est placé après `#save_notebook-button`. L'emplacement est configurable comme expliqué ci-dessous. Pour prendre en charge un autre site, il faut vérifier son API Jupyter et son interface ; changer uniquement le domaine ne suffit pas nécessairement.
+
+## Personnaliser les scripts
+
+Les paramètres modifiables sont regroupés au début de chaque fichier dans un bloc **CONFIG**. Les deux scripts restent autonomes : aucun fichier de configuration externe à installer ou à charger.
+
+### Quel script est générique ?
+
+| Fichier | Dépend du domaine ? | Dépend de la barre de boutons du site ? | Paramètres à modifier |
+| --- | --- | --- | --- |
+| `notebook-downloader-console.js` | Non | Non | Aucun pour commencer. `CONFIG.fileName` permet de changer le nom proposé. |
+| `notebook-downloader.user.js` | Oui, via `@match` | Oui, via `CONFIG.anchorSelector` | Pour un autre site : domaine autorisé et emplacement du bouton. Texte, icône, couleur et nom du fichier sont facultatifs. |
+
+« Générique » signifie ici **compatible avec les pages qui exposent Jupyter classique**. Le copier-coller console ne garantit pas la compatibilité avec JupyterLab, Google Colab ou un autre éditeur de notebooks utilisant une API différente.
+
+### Mode console
+
+Modifie uniquement ce bloc si tu veux un autre nom :
+
+```javascript
+const CONFIG = Object.freeze({
+  fileName: 'cours.ipynb',
+});
+```
+
+Puis copie **tout le fichier** dans la console de la page du notebook. Aucune URL, aucun nom d'école et aucun identifiant n'est nécessaire.
+
+### Mode bouton : 1. Choisir le site dans l'en-tête
+
+La ligne `@match` indique à Tampermonkey **où le script peut s'exécuter**. Il s'agit d'un filtre de domaine, pas de ton lien de connexion personnel. Le filtre actuel couvre les différents serveurs de notebooks de la plateforme prise en charge : tu n'as pas besoin d'y mettre ton sous-domaine personnel.
+
+Pour un autre site compatible, remplace cette ligne par son propre motif. Exemple fictif :
+
+```javascript
+// @match        https://notebooks.exemple.fr/*
+```
+
+Plusieurs sites peuvent être déclarés avec plusieurs lignes `@match`. N'ajoute que les domaines que tu souhaites utiliser.
+
+**Ce réglage doit rester dans l'en-tête.** Tampermonkey le lit avant d'exécuter le JavaScript : écrire une URL dans `CONFIG` ne modifierait pas `@match`. L'adresse du site est donc définie une seule fois, dans cet en-tête, sans copie à synchroniser dans le moteur.
+
+### Mode bouton : 2. Modifier CONFIG
+
+```javascript
+const CONFIG = Object.freeze({
+  anchorSelector: '#save_notebook-button',
+  buttonLabel: 'Télécharger',
+  buttonIcon: '↓',
+  accentColor: '#ff6847',
+  fileName: '',
+  fallbackFileName: 'notebook.ipynb',
+});
+```
+
+| Paramètre | Effet |
+| --- | --- |
+| `anchorSelector` | Sélecteur CSS d'un élément après lequel ajouter le bouton. `#save_notebook-button` désigne l'élément portant cet identifiant. Il doit exister sur le site cible. |
+| `buttonLabel` | Texte du bouton. |
+| `buttonIcon` | Symbole affiché, sans dépendance aux polices d'icônes du site. Mettre `''` pour le masquer. |
+| `accentColor` | Couleur CSS du contour de sélection et des messages. |
+| `fileName` | `''` conserve automatiquement le nom du notebook. Une valeur comme `'mes_notes.ipynb'` impose un nom. |
+| `fallbackFileName` | Nom proposé si le notebook n'a pas de nom identifiable. |
+
+Une modification dans CONFIG est réutilisée partout où ce réglage intervient : il n'est pas nécessaire de remplacer des valeurs dans le reste du fichier. Les identifiants internes du script et les mécanismes Jupyter ne sont pas des informations personnelles à configurer.
+
+Après modification dans Tampermonkey, enregistre avec **Ctrl+S**, puis recharge le notebook après avoir sauvegardé ton travail. Les modifications locales dans Tampermonkey ne changent pas le fichier partagé sur GitHub ; une réinstallation ou une mise à jour peut remplacer ces personnalisations. Garde une copie de tes paramètres si tu les modifies.
 
 ## Ce que contient le téléchargement
 
-Les deux scripts utilisent la fonction native Jupyter `toJSON()` pour exporter **l'état du notebook actuellement ouvert**, y compris les modifications présentes avant un clic sur SAVE. Le mode bouton ajoute des vérifications de structure et de nombre des cellules avant de demander le téléchargement. Le mode console conserve le fonctionnement simple du script initial et utilise le nom fixe `cours.ipynb`.
+Les deux scripts utilisent la fonction native Jupyter `toJSON()` pour exporter **l'état du notebook actuellement ouvert**, y compris les modifications présentes avant un clic sur SAVE. Le mode bouton ajoute des vérifications de structure et de nombre des cellules avant de demander le téléchargement. Le mode console conserve le fonctionnement simple du script initial et utilise le nom configuré dans `CONFIG.fileName` (`cours.ipynb` par défaut).
 
 Les deux modes conservent les données fournies par Jupyter sans filtrer les cellules, le code, le texte, les sorties, les pièces jointes ou les métadonnées. Ils ne téléchargent pas le fichier brut du serveur et ne garantissent pas une identité octet par octet avec celui-ci.
 
