@@ -1,8 +1,14 @@
 // Notebook Downloader — mode console, sans extension.
 // À coller dans la console du navigateur (F12 → Console), pas dans une cellule Python.
-// Télécharge le notebook Jupyter classique actuellement ouvert sous le nom cours.ipynb.
+// Télécharge le notebook Jupyter classique actuellement ouvert, sans adresse de site à configurer.
 
 (() => {
+  // ================= PARAMÈTRES À PERSONNALISER =================
+  const CONFIG = Object.freeze({
+    fileName: 'cours.ipynb', // Nom proposé pour le téléchargement (garder l'extension .ipynb).
+  });
+  // ================= FIN DES PARAMÈTRES =================
+
   // Récupère le notebook via Jupyter, ou via l'ancienne API IPython.
   const notebook = window.Jupyter?.notebook
     ?? window.IPython?.notebook;
@@ -23,7 +29,7 @@
   // Crée un lien temporaire et déclenche son téléchargement.
   const lien = document.createElement('a');
   lien.href = url;
-  lien.download = 'cours.ipynb';
+  lien.download = CONFIG.fileName;
   document.body.appendChild(lien);
   lien.click();
   lien.remove();
