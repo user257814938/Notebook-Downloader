@@ -19,7 +19,7 @@ Installe d'abord Tampermonkey, puis ouvre ce lien dans le même navigateur sur o
 2. Ouvre [notebook-downloader-console.js](notebook-downloader-console.js), puis copie tout le code. Sur GitHub, le bouton **Raw** permet d'afficher le contenu brut.
 3. Dans l'onglet du notebook, appuie sur **F12**, puis sélectionne **Console**.
 4. Colle le code à côté du symbole `>`, puis appuie sur **Entrée**. Il s'agit de la console du navigateur, pas d'une cellule Python.
-5. Enregistre le fichier proposé : **`cours.ipynb`**. Tu peux changer ce nom dans la fenêtre d'enregistrement.
+5. Enregistre le fichier proposé : **le nom du notebook est récupéré automatiquement**, par exemple `00_python_01_variables.ipynb`. Tu n'as aucun nom à saisir dans le script.
 
 Si le navigateur bloque le collage avec un avertissement, prends connaissance du script et du message avant de suivre les indications affichées. Le script fourni lit le notebook ouvert et crée le fichier localement ; il ne transmet pas le contenu à un autre site.
 
@@ -84,22 +84,25 @@ Les paramètres modifiables sont regroupés au début de chaque fichier dans un 
 
 | Fichier | Dépend du domaine ? | Dépend de la barre de boutons du site ? | Paramètres à modifier |
 | --- | --- | --- | --- |
-| `notebook-downloader-console.js` | Non | Non | Aucun pour commencer. `CONFIG.fileName` permet de changer le nom proposé. |
+| `notebook-downloader-console.js` | Non | Non | Aucun : le nom du notebook est récupéré automatiquement. `CONFIG.fileName` permet seulement d'imposer un autre nom si souhaité. |
 | `notebook-downloader.user.js` | Oui, via `@match` | Oui, via `CONFIG.anchorSelector` | Pour un autre site : domaine autorisé et emplacement du bouton. Texte, icône, couleur et nom du fichier sont facultatifs. |
 
 « Générique » signifie ici **compatible avec les pages qui exposent Jupyter classique**. Le copier-coller console ne garantit pas la compatibilité avec JupyterLab, Google Colab ou un autre éditeur de notebooks utilisant une API différente.
 
 ### Mode console
 
-Modifie uniquement ce bloc si tu veux un autre nom :
+Par défaut, **ne modifie rien** : copie-colle le fichier entier dans la console, et le téléchargement reprend le nom du notebook ouvert. Les paramètres suivants sont facultatifs :
 
 ```javascript
 const CONFIG = Object.freeze({
-  fileName: 'cours.ipynb',
+  fileName: '',
+  fallbackFileName: 'notebook.ipynb',
 });
 ```
 
-Puis copie **tout le fichier** dans la console de la page du notebook. Aucune URL, aucun nom d'école et aucun identifiant n'est nécessaire.
+`fileName: ''` active le nom automatique. `fallbackFileName` sert uniquement si aucun nom n'est disponible. Pour imposer volontairement un nom, tu peux remplacer `''` par `'mes_notes.ipynb'`.
+
+Copie **tout le fichier** dans la console de la page du notebook. Aucune URL, aucun nom d'école et aucun identifiant n'est nécessaire.
 
 ### Mode bouton : 1. Choisir le site dans l'en-tête
 
@@ -143,7 +146,7 @@ Après modification dans Tampermonkey, enregistre avec **Ctrl+S**, puis recharge
 
 ## Ce que contient le téléchargement
 
-Les deux scripts utilisent la fonction native Jupyter `toJSON()` pour exporter **l'état du notebook actuellement ouvert**, y compris les modifications présentes avant un clic sur SAVE. Le mode bouton ajoute des vérifications de structure et de nombre des cellules avant de demander le téléchargement. Le mode console conserve le fonctionnement simple du script initial et utilise le nom configuré dans `CONFIG.fileName` (`cours.ipynb` par défaut).
+Les deux scripts utilisent la fonction native Jupyter `toJSON()` pour exporter **l'état du notebook actuellement ouvert**, y compris les modifications présentes avant un clic sur SAVE. Ils récupèrent tous les deux le nom du notebook automatiquement par défaut. `CONFIG.fileName` permet d'imposer un autre nom uniquement si tu le souhaites. Le mode bouton ajoute des vérifications de structure et de nombre des cellules avant de demander le téléchargement.
 
 Les deux modes conservent les données fournies par Jupyter sans filtrer les cellules, le code, le texte, les sorties, les pièces jointes ou les métadonnées. Ils ne téléchargent pas le fichier brut du serveur et ne garantissent pas une identité octet par octet avec celui-ci.
 
