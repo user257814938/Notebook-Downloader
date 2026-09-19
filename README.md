@@ -6,12 +6,14 @@ Deux modes sont disponibles. Choisis celui qui te convient : tu n'as pas besoin 
 
 | Mode | Fichier | Utilisation |
 | --- | --- | --- |
-| **Bouton permanent** | [notebook-downloader.user.js](notebook-downloader.user.js) | À installer une fois avec [Tampermonkey](https://www.tampermonkey.net/). Ajoute un bouton **Télécharger** à côté de **SAVE** sur les pages compatibles. |
+| **Bouton permanent** | [notebook-downloader.user.js](notebook-downloader.user.js) | À installer une fois avec [Tampermonkey](https://www.tampermonkey.net/). Ajoute un bouton **Download** à côté de **SAVE**, ou flottant en haut à droite. |
 | **Console, sans extension** | [notebook-downloader-console.js](notebook-downloader-console.js) | À copier dans la console du navigateur à chaque téléchargement. |
 
 **[Installer Notebook Downloader avec Tampermonkey](https://raw.githubusercontent.com/user257814938/Notebook-Downloader/main/notebook-downloader.user.js)**
 
 Installe d'abord Tampermonkey, puis ouvre ce lien dans le même navigateur sur ordinateur.
+
+**Chrome / Comet :** dans les détails de l'extension Tampermonkey, active **Autoriser les scripts utilisateur**. Installer l'extension et activer le script dans son tableau de bord ne suffit pas si cette autorisation du navigateur est désactivée. Recharge ensuite le cours. Voir l'[aide officielle](https://www.tampermonkey.net/faq.php?q=Q209).
 
 ## Mode console — sans extension
 
@@ -32,7 +34,7 @@ Ce mode reprend le script console initial, avec des commentaires JavaScript vali
 1. Installe **Tampermonkey** depuis la boutique officielle de ton navigateur, accessible via son [site officiel](https://www.tampermonkey.net/).
 2. Ouvre le **[lien d'installation direct](https://raw.githubusercontent.com/user257814938/Notebook-Downloader/main/notebook-downloader.user.js)** dans le navigateur où Tampermonkey est installé. Tu peux aussi ouvrir **[notebook-downloader.user.js](notebook-downloader.user.js)** sur GitHub, puis cliquer sur **Raw** (fichier brut).
 3. Tampermonkey doit afficher une page d'installation pour **Notebook Downloader**. Clique sur **Installer**.
-4. Recharge ton notebook après avoir sauvegardé tes modifications. Le bouton **Télécharger** apparaît à côté de **SAVE**.
+4. Recharge ton notebook après avoir sauvegardé tes modifications. Le bouton **Download** apparaît à côté de **SAVE**, ou en haut à droite si cet emplacement est introuvable ou masqué.
 
 ### Si le lien affiche du code au lieu du bouton Installer
 
@@ -42,6 +44,18 @@ Ce mode reprend le script console initial, avec des commentaires JavaScript vali
 4. Confirme avec **Installer**, puis recharge ton notebook.
 
 Aucun compte GitHub n'est nécessaire pour récupérer le script depuis ce dépôt public.
+
+## Mises à jour automatiques depuis GitHub
+
+À partir de la version **1.3.0**, le script déclare explicitement ses adresses `@updateURL` et `@downloadURL`, qui pointent vers le fichier Raw de la branche `main` de ce dépôt. Tampermonkey vérifie cette adresse et récupère les nouvelles versions selon ses réglages de mise à jour. Le contenu de tes notebooks n'est pas envoyé à GitHub.
+
+- **Première transition :** ouvre une fois le [lien d'installation direct](https://raw.githubusercontent.com/user257814938/Notebook-Downloader/main/notebook-downloader.user.js) et confirme la mise à jour, si ta version installée ne dispose pas encore de ces adresses.
+- Dans les paramètres Tampermonkey, conserve les vérifications de mises à jour activées. Dans les paramètres de Notebook Downloader, vérifie que **Rechercher des mises à jour** est coché.
+- Les mises à jour ne sont pas instantanées : Tampermonkey vérifie périodiquement. Tu peux aussi lancer une recherche manuelle depuis son tableau de bord.
+- Recharge la page du notebook après la mise à jour pour utiliser le nouveau code.
+- Pour publier une nouvelle version, augmente toujours `@version` (par exemple `1.3.0` → `1.3.1`) et publie le fichier à la même adresse. Modifier uniquement le code sans augmenter ce numéro ne suffit pas.
+
+Les mises à jour remplacent le code du script, y compris les personnalisations effectuées directement dans CONFIG. Ce mécanisme met à jour **Notebook Downloader dans Tampermonkey** ; l'extension Tampermonkey elle-même reste mise à jour par la boutique du navigateur. Le script console se récupère manuellement et n'est pas concerné.
 
 ## Mode bouton — installation manuelle alternative
 
@@ -56,8 +70,14 @@ Si tu avais installé une première version de ce projet sous un autre nom, dés
 
 ## Utilisation du bouton
 
+**SAVE** enregistre le notebook sur la plateforme. Le bouton séparé **Download** télécharge le fichier `.ipynb` sur ton ordinateur. Si la barre est absente ou masquée, **Download** apparaît en bouton flottant en haut à droite.
+
+Dans la barre, le bouton reprend automatiquement les classes CSS, la police, la taille, la graisse, l'espacement des lettres et les dimensions du bouton voisin. Sur la plateforme examinée : Rubik, 11 px, graisse 600, majuscules et espacement de 1,4 px. Ces valeurs sont lues sur la page, sans être imposées aux autres sites. L'icône SVG de 24 px est intégrée directement au script ; aucun fichier image séparé n'est nécessaire.
+
+La version 1.2.2 a été vérifiée dans Comet après rechargement : le bouton apparaît automatiquement et ses styles calculés correspondent à ceux de SAVE (typographie, hauteur de 60 px et marges internes de 0 px / 20 px).
+
 1. Connecte-toi à ta plateforme et ouvre un notebook compatible.
-2. Attends son chargement, puis clique sur **Télécharger**.
+2. Attends son chargement, puis clique sur **Download**.
 3. Si le navigateur le demande, choisis le dossier et clique sur **Enregistrer**.
 
 Le fichier conserve le nom du notebook ouvert, par exemple `introduction_python.ipynb`. Le navigateur gère le dossier de destination et les éventuels doublons selon ses réglages.
@@ -68,13 +88,13 @@ Tu peux ensuite importer le fichier dans Google Drive ou l'enregistrer dans un d
 
 Les deux modes nécessitent une interface **Jupyter classique** exposant `Jupyter.notebook` ou `IPython.notebook` et sa fonction `toJSON()`. Ils ne fonctionnent pas automatiquement sur tous les sites de notebooks.
 
-Le **mode bouton** est adapté à une barre de commandes précise. Les pages concernées sont définies dans la ligne `@match` du script Tampermonkey :
+Le **mode bouton** se place dans la barre de commandes ou, si son emplacement est absent ou masqué, en bouton flottant en haut à droite. Les pages concernées sont définies dans la ligne `@match` du script Tampermonkey :
 
 ```javascript
 // @match        https://*.notebooks.datascientest.com/*
 ```
 
-Ce filtre technique reste nécessaire pour limiter l'exécution aux pages prises en charge. Par défaut, le bouton est placé après `#save_notebook-button`. L'emplacement est configurable comme expliqué ci-dessous. Pour prendre en charge un autre site, il faut vérifier son API Jupyter et son interface ; changer uniquement le domaine ne suffit pas nécessairement.
+Ce filtre technique reste nécessaire pour limiter l'exécution aux pages prises en charge. Par défaut, le bouton est placé après `#save_notebook-button`. L'emplacement est configurable comme expliqué ci-dessous. Pour prendre en charge un autre site, il faut vérifier son API Jupyter. Le bouton flottant permet de fonctionner sans adapter l'emplacement dans sa barre de commandes.
 
 ## Personnaliser les scripts
 
@@ -85,7 +105,7 @@ Les paramètres modifiables sont regroupés au début de chaque fichier dans un 
 | Fichier | Dépend du domaine ? | Dépend de la barre de boutons du site ? | Paramètres à modifier |
 | --- | --- | --- | --- |
 | `notebook-downloader-console.js` | Non | Non | Aucun : le nom du notebook est récupéré automatiquement. `CONFIG.fileName` permet seulement d'imposer un autre nom si souhaité. |
-| `notebook-downloader.user.js` | Oui, via `@match` | Oui, via `CONFIG.anchorSelector` | Pour un autre site : domaine autorisé et emplacement du bouton. Texte, icône, couleur et nom du fichier sont facultatifs. |
+| `notebook-downloader.user.js` | Oui, via `@match` | Non : bouton flottant de secours | Pour un autre site compatible : domaine autorisé. Emplacement, texte, icône, couleur et nom du fichier sont facultatifs. |
 
 « Générique » signifie ici **compatible avec les pages qui exposent Jupyter classique**. Le copier-coller console ne garantit pas la compatibilité avec JupyterLab, Google Colab ou un autre éditeur de notebooks utilisant une API différente.
 
@@ -123,8 +143,8 @@ Plusieurs sites peuvent être déclarés avec plusieurs lignes `@match`. N'ajout
 ```javascript
 const CONFIG = Object.freeze({
   anchorSelector: '#save_notebook-button',
-  buttonLabel: 'Télécharger',
-  buttonIcon: '↓',
+  buttonLabel: 'Download',
+  buttonIcon: 'download',
   accentColor: '#ff6847',
   fileName: '',
   fallbackFileName: 'notebook.ipynb',
@@ -133,9 +153,9 @@ const CONFIG = Object.freeze({
 
 | Paramètre | Effet |
 | --- | --- |
-| `anchorSelector` | Sélecteur CSS d'un élément après lequel ajouter le bouton. `#save_notebook-button` désigne l'élément portant cet identifiant. Il doit exister sur le site cible. |
+| `anchorSelector` | Sélecteur CSS d'un élément après lequel ajouter le bouton. `#save_notebook-button` désigne l'élément portant cet identifiant. S'il est absent ou masqué, le bouton flotte en haut à droite. |
 | `buttonLabel` | Texte du bouton. |
-| `buttonIcon` | Symbole affiché, sans dépendance aux polices d'icônes du site. Mettre `''` pour le masquer. |
+| `buttonIcon` | `'download'` affiche une flèche vers un bac, dessinée en SVG intégré. Un autre texte affiche ce symbole ; `''` masque l'icône. Aucune bibliothèque ni police externe nécessaire. |
 | `accentColor` | Couleur CSS du contour de sélection et des messages. |
 | `fileName` | `''` conserve automatiquement le nom du notebook. Une valeur comme `'mes_notes.ipynb'` impose un nom. |
 | `fallbackFileName` | Nom proposé si le notebook n'a pas de nom identifiable. |
@@ -158,6 +178,7 @@ Les vidéos, images liées par URL, fichiers de données externes et l'environne
 - Vérifie que ton notebook est ouvert sur une page compatible et recharge cette page.
 - Vérifie que Tampermonkey est autorisé sur le site concerné.
 - Si l'extension demande l'autorisation d'exécuter des scripts utilisateur, consulte son [aide officielle](https://www.tampermonkey.net/faq.php?q=Q209).
+- Sur Chrome / Comet, vérifie **Autoriser les scripts utilisateur** dans les détails de Tampermonkey, même si le script apparaît déjà activé dans son tableau de bord.
 - Si le bouton indique que le notebook est encore en chargement, attends quelques secondes et réessaie.
 
 ## Partager le script
@@ -174,6 +195,6 @@ Désactive **Notebook Downloader** dans Tampermonkey, puis recharge le notebook.
 
 ## Fonctionnement et vérifications
 
-Les scripts ne contiennent aucun identifiant, ne font aucune requête réseau et ne modifient pas les réglages du navigateur. L'intégration de la barre du mode bouton a été examinée sur une page de cours connectée.
+Le code d'export ne contient aucun identifiant personnel, ne fait aucune requête réseau et ne modifie pas les réglages du navigateur. Tampermonkey peut contacter GitHub séparément pour récupérer les mises à jour du script. L'intégration de la barre du mode bouton a été examinée sur une page de cours connectée.
 
-Des vérifications locales ont confirmé la conservation des données JSON d'un notebook de 43 cellules, le nommage des fichiers, les messages d'erreur et l'absence de boutons en double. L'installation Tampermonkey et l'enregistrement final doivent encore être confirmés dans le navigateur habituel ; ces tests locaux ne remplacent pas cette vérification.
+Des vérifications locales ont confirmé la conservation des données JSON d'un notebook de 43 cellules, le nommage des fichiers, les messages d'erreur et l'absence de boutons en double. Des simulations supplémentaires couvrent le bouton flottant, l'apparition tardive de la barre et la disparition de son emplacement. L'installation depuis le lien Raw a été confirmée par l'utilisateur. Un essai réel de la version 1.2.0 exécutée depuis la console dans Comet a confirmé l'affichage du bouton et l'enregistrement de `00_python_01_variables.ipynb` : 32 cellules, 31 443 octets, JSON au format notebook 4. Cet essai ne valide pas à lui seul le lancement automatique par Tampermonkey.
